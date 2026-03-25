@@ -1,150 +1,307 @@
-import { useState } from 'react';
-import { Box, Button, Container, Paper, TextField, Typography, Alert, Chip, IconButton, Checkbox, Select, MenuItem, FormControl, InputLabel, Divider} from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import AddIcon from '@mui/icons-material/Add';
+import { useState, useEffect } from 'react';
+import { Box, Button, Container, Typography } from '@mui/material';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import { useNavigate } from 'react-router-dom';
-
-//SAMPLE DATA
-const initialTasks = [
-  { id: 1, title: 'Submit Homework', priority: 'high', completed: false, type: 'task', deadline: '2026-03-05' },
-  { id: 2, title: 'Review lecture notes', priority: 'medium', completed: false, type: 'task', deadline: '2026-03-03' },
-  { id: 3, title: 'Go to class', priority: 'low', completed: false, type: 'habit', deadline: '' },
-];
-
-const priorityColour = {
-  high: 'error',
-  medium: 'warning',
-  low: 'success',
-};
+import api from '../api/api';
+import { today, mapHabits, getDueDateStr, sortByPriority } from '../components/dashboardUtils'
+import AddForm from '../components//AddForm';
+import TaskList from '../components//TaskList';
+import HabitList from '../components//HabitList';
+import { EditTaskDialog, EditHabitDialog } from '../components/EditDialogs';
 
 function DashboardPage() {
-  const [items, setItems] = useState(initialTasks);
-  const [newTitle, setNewTitle] = useState('');
-  const [newPriority, setNewPriority] = useState('medium');
-  const [newType, setNewType] = useState('task');
-  const [newDeadline, setNewDeadline] = useState('');
+
+  const [tasks, setTasks]     = useState([]);
+  const [habits, setHabits]   = useState([]);
+  const [loading, setLoading] = useState(true);
   const [feedback, setFeedback] = useState('');
+
+  // Shared add-form fields
+  const [newTitle, setNewTitle] = useState('');
+  const [newType, setNewType]   = useState('task');
+
+  // Task add-form fields
+  const [newPriority, setNewPriority] = useState('medium');
+  const [newDeadline, setNewDeadline] = useState('');
+
+  // Habit add-form fields
+  const [habitScheduleType, setHabitScheduleType] = useState('daily');
+  const [habitTimesPerWeek, setHabitTimesPerWeek] = useState(3);
+  const [habitTargetType, setHabitTargetType]     = useState('binary');
+  const [habitTargetValue, setHabitTargetValue]   = useState(1);
+  const [habitTargetUnit, setHabitTargetUnit]     = useState('');
+
+  // Edit Task Dialog state
+
+  const [editingTask, setEditingTask]           = useState(null);
+  const [editTaskTitle, setEditTaskTitle]       = useState('');
+  const [editTaskPriority, setEditTaskPriority] = useState('medium');
+  const [editTaskDeadline, setEditTaskDeadline] = useState('');
+
+  // Edit Habit Dialog state
+
+  const [editingHabit, setEditingHabit]                   = useState(null);
+  const [editHabitName, setEditHabitName]                 = useState('');
+  const [editHabitSchedule, setEditHabitSchedule]         = useState('daily');
+  const [editHabitTimesPerWeek, setEditHabitTimesPerWeek] = useState(3);
+  const [editHabitTargetType, setEditHabitTargetType]     = useState('binary');
+  const [editHabitTargetValue, setEditHabitTargetValue]   = useState(1);
+  const [editHabitTargetUnit, setEditHabitTargetUnit]     = useState('');
+
   const navigate = useNavigate();
-  const today = new Date().toLocaleDateString('en-US', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+
+  const todayLabel = new Date().toLocaleDateString('en-US', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
   });
 
-  const handleAdd = () => {
+  // Data retrieval
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [tasksRes, todayRes] = await Promise.all([
+          api.get('/tasks'),
+          api.get('/today'),
+        ]);
+        setTasks(sortByPriority(tasksRes.data.map((t) => ({ ...t, id: t._id }))));
+        setHabits(mapHabits(todayRes.data.habits));
+      } catch (err) {
+        setFeedback('Failed to load data from server.');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // Add task / habit
+
+  const handleAdd = async () => {
     if (!newTitle.trim()) {
       setFeedback('Please enter a title.');
       return;
     }
-    const newItem = {
-      id: Date.now(),
-      title: newTitle,
-      priority: newPriority,
-      type: newType,
-      completed: false,
-      deadline: newDeadline,
-    };
-    setItems([...items, newItem]);
-    setNewTitle('');
-    setNewDeadline('');
-    setFeedback('');
-  };
 
-  const handleToggle = (id) => {
-    setItems(items.map(item => {
-      if (item.id === id) {
-        return { ...item, completed: !item.completed };
-      } else {
-        return item;
+    // Duplicate habit check
+    if (newType === 'habit') {
+      const duplicate = habits.some(
+        (h) => h.habit.name.toLowerCase() === newTitle.trim().toLowerCase()
+      );
+      if (duplicate) {
+        setFeedback('A habit with this name already exists.');
+        return;
       }
-    }));
+    }
+
+    const payload =
+      newType === 'task'
+        ? {
+            title: newTitle,
+            priority: newPriority,
+            dueAt: newDeadline ? `${newDeadline}T00:00:00` : null,
+          }
+        : {
+            name: newTitle,
+            description: '',
+            targetType: habitTargetType,
+            targetValue: habitTargetType === 'binary' ? 1 : habitTargetValue,
+            targetUnit: habitTargetType === 'binary' ? 'times' : habitTargetUnit,
+            schedule: {
+              type: habitScheduleType === 'weekly' ? 'weekly_x' : habitScheduleType,
+              daysOfWeek: [],
+              timesPerWeek: habitScheduleType === 'weekly' ? habitTimesPerWeek : 1,
+            },
+            startDate: today,
+          };
+
+    try {
+      const endpoint = newType === 'task' ? '/tasks' : '/habits';
+      const res = await api.post(endpoint, payload);
+
+      if (newType === 'task') {
+        setTasks((prev) => [{ ...res.data, id: res.data._id }, ...prev]);
+      } else {
+        const todayRes = await api.get('/today');
+        setHabits(mapHabits(todayRes.data.habits));
+      }
+
+      setNewTitle('');
+      setNewDeadline('');
+      setFeedback('');
+    } catch (err) {
+      setFeedback('Failed to add item. Check console for details.');
+      console.error(err.response?.data || err);
+    }
   };
 
-  const handleDelete = (id) => {
-    setItems(items.filter(item => item.id !== id));
+  // Open / Close Edit Task Dialog
+
+  const openEditTask = (task) => {
+    setEditingTask(task);
+    setEditTaskTitle(task.title);
+    setEditTaskPriority(task.priority);
+    setEditTaskDeadline(task.dueAt ? getDueDateStr(task.dueAt) : '');
   };
 
-  const tasks = items.filter(i => i.type === 'task');
-  const habits = items.filter(i => i.type === 'habit');
+  const closeEditTask = () => setEditingTask(null);
 
-  const formatDeadline = (deadline) => {
-    if (!deadline) return null;
-    const date = new Date(deadline + 'T00:00:00');
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const handleSaveTask = async () => {
+    if (!editTaskTitle.trim()) return;
+    try {
+      const res = await api.patch(`/tasks/${editingTask.id}`, {
+        title: editTaskTitle,
+        priority: editTaskPriority,
+        dueAt: editTaskDeadline ? `${editTaskDeadline}T00:00:00` : null,
+      });
+      setTasks((prev) =>
+        prev.map((t) =>
+          t.id === editingTask.id ? { ...res.data, id: res.data._id } : t
+        )
+      );
+      closeEditTask();
+    } catch (err) {
+      console.error('Failed to update task:', err);
+    }
   };
 
-  const isToday = (deadline) => {
-    if (!deadline) return false;
-    const today = new Date().toISOString().split('T')[0];
-    return deadline === today;
+  //  Open / Close Edit Habit Dialog
+
+  const openEditHabit = (habitEntry) => {
+    const { habit } = habitEntry;
+    setEditingHabit(habitEntry);
+    setEditHabitName(habit.name);
+    // Map backend 'weekly_x' back to 'weekly' for the dropdown display
+    setEditHabitSchedule(
+      habit.schedule?.type === 'weekly_x' ? 'weekly' : (habit.schedule?.type ?? 'daily')
+    );
+    setEditHabitTimesPerWeek(habit.schedule?.timesPerWeek ?? 3);
+    setEditHabitTargetType(habit.targetType ?? 'binary');
+    setEditHabitTargetValue(habit.targetValue ?? 1);
+    setEditHabitTargetUnit(habit.targetUnit ?? '');
   };
 
-  const isOverdue = (deadline, completed) => {
-    if (!deadline || completed) return false;
-    const today = new Date().toISOString().split('T')[0];
-    return deadline < today;
+  const closeEditHabit = () => setEditingHabit(null);
+
+  const handleSaveHabit = async () => {
+    if (!editHabitName.trim()) return;
+    try {
+      await api.patch(`/habits/${editingHabit.habit._id}`, {
+        name: editHabitName,
+        targetType: editHabitTargetType,
+        targetValue: editHabitTargetType === 'binary' ? 1 : editHabitTargetValue,
+        targetUnit: editHabitTargetType === 'binary' ? 'times' : editHabitTargetUnit,
+        schedule: {
+          type: editHabitSchedule === 'weekly' ? 'weekly_x' : editHabitSchedule,
+          daysOfWeek: [],
+          timesPerWeek: editHabitSchedule === 'weekly' ? editHabitTimesPerWeek : 1,
+        },
+      });
+      // Refetch so habit list reflects the updated schedule/target
+      const todayRes = await api.get('/today');
+      setHabits(mapHabits(todayRes.data.habits));
+      closeEditHabit();
+    } catch (err) {
+      console.error('Failed to update habit:', err);
+    }
   };
 
-  const renderItem = (item) => (
-    <Box key={item.id}>
-      <Box sx={{ display: 'flex', alignItems: 'center', py: 1 }}>
-        <Checkbox
-          checked={item.completed}
-          onChange={() => handleToggle(item.id)}
-          sx={{ color: '#1a1a2e', '&.Mui-checked': { color: '#1a1a2e' } }}
-        />
-        <Box sx={{ flex: 1 }}>
-          <Typography
-            variant="body1"
-            sx={{
-              textDecoration: item.completed ? 'line-through' : 'none',
-              color: item.completed ? 'text.secondary' : 'text.primary',
-            }}
-          >
-            {item.title}
-          </Typography>
-          {item.deadline && (
-            <Typography
-              variant="caption"
-              sx={{
-                color: isOverdue(item.deadline, item.completed)
-                  ? 'error.main'
-                  : isToday(item.deadline)
-                  ? 'warning.main'
-                  : 'text.secondary',
-              }}
-            >
-              {isOverdue(item.deadline, item.completed)
-                ? `Overdue · ${formatDeadline(item.deadline)}`
-                : isToday(item.deadline)
-                ? `Due today · ${formatDeadline(item.deadline)}`
-                : `Due ${formatDeadline(item.deadline)}`}
-            </Typography>
-          )}
-        </Box>
-        <Chip
-          label={item.priority}
-          color={priorityColour[item.priority]}
-          size="small"
-          sx={{ mr: 1, textTransform: 'capitalize' }}
-        />
-        <IconButton onClick={() => handleDelete(item.id)} size="small">
-          <DeleteIcon fontSize="small" />
-        </IconButton>
-      </Box>
-      <Divider />
-    </Box>
-  );
+  // Toggle Task
+
+  const handleToggleTask = async (task) => {
+    try {
+      if (task.status !== 'done') {
+        const res = await api.patch(`/tasks/${task.id}/complete`);
+        setTasks((prev) =>
+          prev.map((t) => (t.id === task.id ? { ...res.data, id: res.data._id } : t))
+        );
+      } else {
+        const res = await api.patch(`/tasks/${task.id}`, { status: 'todo' });
+        setTasks((prev) =>
+          prev.map((t) => (t.id === task.id ? { ...res.data, id: res.data._id } : t))
+        );
+      }
+    } catch (err) {
+      console.error('Failed to toggle task:', err);
+    }
+  };
+
+  // Toggle Habit
+
+  const handleToggleBinaryHabit = async (habitEntry) => {
+    const isDone = habitEntry.statusToday === 'done';
+    try {
+      await api.post('/habit-logs', {
+        habitId: habitEntry.habit._id,
+        date: today,
+        status: isDone ? 'missed' : 'done',
+      });
+      setHabits((prev) =>
+        prev.map((h) =>
+          h.habit._id === habitEntry.habit._id
+            ? { ...h, statusToday: isDone ? 'missed' : 'done' }
+            : h
+        )
+      );
+    } catch (err) {
+      console.error('Failed to log binary habit:', err);
+    }
+  };
+
+  // Count Habit: Increment / Decrement
+
+  const handleCountChange = async (habitEntry, delta) => {
+    const target = habitEntry.habit.targetValue;
+    const newValue = Math.max(0, Math.min(target, (habitEntry.currentValue || 0) + delta));
+    const newStatus =
+      newValue >= target ? 'done' : newValue > 0 ? 'in_progress' : 'missed';
+
+    try {
+      await api.post('/habit-logs', {
+        habitId: habitEntry.habit._id,
+        date: today,
+        status: newStatus,
+        value: newValue,
+      });
+      setHabits((prev) =>
+        prev.map((h) =>
+          h.habit._id === habitEntry.habit._id
+            ? { ...h, currentValue: newValue, statusToday: newStatus }
+            : h
+        )
+      );
+    } catch (err) {
+      console.error('Failed to log count habit:', err);
+    }
+  };
+
+  // Delete
+
+  const handleDeleteTask = async (task) => {
+    try {
+      await api.delete(`/tasks/${task.id}`);
+      setTasks((prev) => prev.filter((t) => t.id !== task.id));
+    } catch (err) {
+      console.error('Failed to delete task:', err);
+    }
+  };
+
+  const handleDeleteHabit = async (habitEntry) => {
+    try {
+      await api.delete(`/habits/${habitEntry.habit._id}`);
+      setHabits((prev) => prev.filter((h) => h.habit._id !== habitEntry.habit._id));
+    } catch (err) {
+      console.error('Failed to delete habit:', err);
+    }
+  };
 
   return (
     <Box sx={{ minHeight: '100vh', width: '100%', backgroundColor: '#f0f2f5', py: 4 }}>
       <Container maxWidth="md">
 
+        {/* Header */}
         <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <Box>
-            <Typography variant="body2" color="text.secondary">
-              {today}
-            </Typography>
-          </Box>
+          <Typography variant="body2" color="text.secondary">{todayLabel}</Typography>
           <Button
             variant="outlined"
             onClick={() => navigate('/analytics')}
@@ -153,89 +310,67 @@ function DashboardPage() {
               fontWeight: 'bold',
               borderColor: '#1a1a2e',
               color: '#1a1a2e',
-              '&:hover': { backgroundColor: '#1a1a2e', color: '#fff', borderColor: '#1a1a2e' }
+              '&:hover': { backgroundColor: '#1a1a2e', color: '#fff', borderColor: '#1a1a2e' },
             }}
           >
             Analytics
           </Button>
         </Box>
 
-        <Paper elevation={4} sx={{ p: 4, borderRadius: 3, mb: 3 }}>
-          <Typography variant="h6" fontWeight="bold" gutterBottom>
-            Add New
-          </Typography>
+        <AddForm
+          newTitle={newTitle} setNewTitle={setNewTitle}
+          newType={newType} setNewType={setNewType}
+          feedback={feedback}
+          onAdd={handleAdd}
+          newPriority={newPriority} setNewPriority={setNewPriority}
+          newDeadline={newDeadline} setNewDeadline={setNewDeadline}
+          habitScheduleType={habitScheduleType} setHabitScheduleType={setHabitScheduleType}
+          habitTimesPerWeek={habitTimesPerWeek} setHabitTimesPerWeek={setHabitTimesPerWeek}
+          habitTargetType={habitTargetType} setHabitTargetType={setHabitTargetType}
+          habitTargetValue={habitTargetValue} setHabitTargetValue={setHabitTargetValue}
+          habitTargetUnit={habitTargetUnit} setHabitTargetUnit={setHabitTargetUnit}
+        />
 
-          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-            <TextField
-              label="Title"
-              value={newTitle}
-              onChange={(e) => setNewTitle(e.target.value)}
-              sx={{ flex: 2, minWidth: 200 }}
-            />
+        <TaskList
+          tasks={tasks}
+          loading={loading}
+          onToggle={handleToggleTask}
+          onEdit={openEditTask}
+          onDelete={handleDeleteTask}
+        />
 
-            <TextField
-              label="Deadline"
-              type="date"
-              value={newDeadline}
-              onChange={(e) => setNewDeadline(e.target.value)}
-              InputLabelProps={{ shrink: true }}
-              sx={{ minWidth: 160 }}
-            />
-
-            <FormControl sx={{ minWidth: 130 }}>
-              <InputLabel>Priority</InputLabel>
-              <Select
-                value={newPriority}
-                label="Priority"
-                onChange={(e) => setNewPriority(e.target.value)}
-              >
-                <MenuItem value="high">High</MenuItem>
-                <MenuItem value="medium">Medium</MenuItem>
-                <MenuItem value="low">Low</MenuItem>
-              </Select>
-            </FormControl>
-
-            <FormControl sx={{ minWidth: 120 }}>
-              <InputLabel>Type</InputLabel>
-              <Select
-                value={newType}
-                label="Type"
-                onChange={(e) => setNewType(e.target.value)}
-              >
-                <MenuItem value="task">Task</MenuItem>
-                <MenuItem value="habit">Habit</MenuItem>
-              </Select>
-            </FormControl>
-
-            <Button
-              variant="contained"
-              onClick={handleAdd}
-              startIcon={<AddIcon />}
-            >
-              Add
-            </Button>
-          </Box>
-
-          {feedback && <Alert severity="error" sx={{ mt: 2 }}>{feedback}</Alert>}
-        </Paper>
-
-        <Paper elevation={4} sx={{ p: 4, borderRadius: 3, mb: 3 }}>
-          <Typography variant="h6" fontWeight="bold" gutterBottom>Tasks</Typography>
-          {tasks.length === 0 && (
-            <Typography variant="body2" color="text.secondary">No tasks yet.</Typography>
-          )}
-          {tasks.map(renderItem)}
-        </Paper>
-
-        <Paper elevation={4} sx={{ p: 4, borderRadius: 3 }}>
-          <Typography variant="h6" fontWeight="bold" gutterBottom>Habits</Typography>
-          {habits.length === 0 && (
-            <Typography variant="body2" color="text.secondary">No habits yet.</Typography>
-          )}
-          {habits.map(renderItem)}
-        </Paper>
+        <HabitList
+          habits={habits}
+          loading={loading}
+          onToggleBinary={handleToggleBinaryHabit}
+          onCountChange={handleCountChange}
+          onEdit={openEditHabit}
+          onDelete={handleDeleteHabit}
+        />
 
       </Container>
+
+      <EditTaskDialog
+        open={!!editingTask}
+        onClose={closeEditTask}
+        onSave={handleSaveTask}
+        title={editTaskTitle} setTitle={setEditTaskTitle}
+        priority={editTaskPriority} setPriority={setEditTaskPriority}
+        deadline={editTaskDeadline} setDeadline={setEditTaskDeadline}
+      />
+
+      <EditHabitDialog
+        open={!!editingHabit}
+        onClose={closeEditHabit}
+        onSave={handleSaveHabit}
+        name={editHabitName} setName={setEditHabitName}
+        schedule={editHabitSchedule} setSchedule={setEditHabitSchedule}
+        timesPerWeek={editHabitTimesPerWeek} setTimesPerWeek={setEditHabitTimesPerWeek}
+        targetType={editHabitTargetType} setTargetType={setEditHabitTargetType}
+        targetValue={editHabitTargetValue} setTargetValue={setEditHabitTargetValue}
+        targetUnit={editHabitTargetUnit} setTargetUnit={setEditHabitTargetUnit}
+      />
+
     </Box>
   );
 }
