@@ -8,7 +8,7 @@ export const priorityColor = {
 export const priorityOrder = { high: 0, medium: 1, low: 2 };
 
 // YYYY-MM-DD string for today, used for habit logging and deadline comparisons
-export const today = new Date().toISOString().split('T')[0];
+export const today = new Date().toLocaleDateString('en-CA');
 
 
 /*

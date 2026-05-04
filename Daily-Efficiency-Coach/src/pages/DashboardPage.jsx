@@ -1,60 +1,57 @@
 import { useState, useEffect } from 'react';
-import { Box, Button, Container, Typography } from '@mui/material';
+import { Box, Button, Container, Typography, Stack } from '@mui/material';
 import BarChartIcon from '@mui/icons-material/BarChart';
+import LogoutIcon from '@mui/icons-material/Logout';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/api';
-import { today, mapHabits, getDueDateStr, sortByPriority } from '../components/dashboardUtils'
-import AddForm from '../components//AddForm';
-import TaskList from '../components//TaskList';
-import HabitList from '../components//HabitList';
+import { today, mapHabits, getDueDateStr, sortByPriority } from '../components/dashboardUtils';
+import AddForm from '../components/AddForm';
+import TaskList from '../components/TaskList';
+import HabitList from '../components/HabitList';
 import { EditTaskDialog, EditHabitDialog } from '../components/EditDialogs';
 
 function DashboardPage() {
-
-  const [tasks, setTasks]     = useState([]);
-  const [habits, setHabits]   = useState([]);
+  const [tasks, setTasks] = useState([]);
+  const [habits, setHabits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [feedback, setFeedback] = useState('');
 
   // Shared add-form fields
   const [newTitle, setNewTitle] = useState('');
-  const [newType, setNewType]   = useState('task');
+  const [newType, setNewType] = useState('task');
 
   // Task add-form fields
   const [newPriority, setNewPriority] = useState('medium');
   const [newDeadline, setNewDeadline] = useState('');
+  const [newCategory, setNewCategory] = useState('');
 
   // Habit add-form fields
   const [habitScheduleType, setHabitScheduleType] = useState('daily');
   const [habitTimesPerWeek, setHabitTimesPerWeek] = useState(3);
-  const [habitTargetType, setHabitTargetType]     = useState('binary');
-  const [habitTargetValue, setHabitTargetValue]   = useState(1);
-  const [habitTargetUnit, setHabitTargetUnit]     = useState('');
+  const [habitTargetType, setHabitTargetType] = useState('binary');
+  const [habitTargetValue, setHabitTargetValue] = useState(1);
+  const [habitTargetUnit, setHabitTargetUnit] = useState('');
 
   // Edit Task Dialog state
-
-  const [editingTask, setEditingTask]           = useState(null);
-  const [editTaskTitle, setEditTaskTitle]       = useState('');
+  const [editingTask, setEditingTask] = useState(null);
+  const [editTaskTitle, setEditTaskTitle] = useState('');
   const [editTaskPriority, setEditTaskPriority] = useState('medium');
   const [editTaskDeadline, setEditTaskDeadline] = useState('');
 
   // Edit Habit Dialog state
-
-  const [editingHabit, setEditingHabit]                   = useState(null);
-  const [editHabitName, setEditHabitName]                 = useState('');
-  const [editHabitSchedule, setEditHabitSchedule]         = useState('daily');
+  const [editingHabit, setEditingHabit] = useState(null);
+  const [editHabitName, setEditHabitName] = useState('');
+  const [editHabitSchedule, setEditHabitSchedule] = useState('daily');
   const [editHabitTimesPerWeek, setEditHabitTimesPerWeek] = useState(3);
-  const [editHabitTargetType, setEditHabitTargetType]     = useState('binary');
-  const [editHabitTargetValue, setEditHabitTargetValue]   = useState(1);
-  const [editHabitTargetUnit, setEditHabitTargetUnit]     = useState('');
+  const [editHabitTargetType, setEditHabitTargetType] = useState('binary');
+  const [editHabitTargetValue, setEditHabitTargetValue] = useState(1);
+  const [editHabitTargetUnit, setEditHabitTargetUnit] = useState('');
 
   const navigate = useNavigate();
 
   const todayLabel = new Date().toLocaleDateString('en-US', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
   });
-
-  // Data retrieval
 
   useEffect(() => {
     const fetchData = async () => {
@@ -75,15 +72,12 @@ function DashboardPage() {
     fetchData();
   }, []);
 
-  // Add task / habit
-
   const handleAdd = async () => {
     if (!newTitle.trim()) {
       setFeedback('Please enter a title.');
       return;
     }
 
-    // Duplicate habit check
     if (newType === 'habit') {
       const duplicate = habits.some(
         (h) => h.habit.name.toLowerCase() === newTitle.trim().toLowerCase()
@@ -97,23 +91,24 @@ function DashboardPage() {
     const payload =
       newType === 'task'
         ? {
-            title: newTitle,
-            priority: newPriority,
-            dueAt: newDeadline ? `${newDeadline}T00:00:00` : null,
-          }
+          title: newTitle,
+          priority: newPriority,
+          dueAt: newDeadline ? `${newDeadline}T23:59:59` : null,
+          category: newCategory || null,
+        }
         : {
-            name: newTitle,
-            description: '',
-            targetType: habitTargetType,
-            targetValue: habitTargetType === 'binary' ? 1 : habitTargetValue,
-            targetUnit: habitTargetType === 'binary' ? 'times' : habitTargetUnit,
-            schedule: {
-              type: habitScheduleType === 'weekly' ? 'weekly_x' : habitScheduleType,
-              daysOfWeek: [],
-              timesPerWeek: habitScheduleType === 'weekly' ? habitTimesPerWeek : 1,
-            },
-            startDate: today,
-          };
+          name: newTitle,
+          description: '',
+          targetType: habitTargetType,
+          targetValue: habitTargetType === 'binary' ? 1 : habitTargetValue,
+          targetUnit: habitTargetType === 'binary' ? 'times' : habitTargetUnit,
+          schedule: {
+            type: habitScheduleType === 'weekly' ? 'weekly_x' : habitScheduleType,
+            daysOfWeek: [],
+            timesPerWeek: habitScheduleType === 'weekly' ? habitTimesPerWeek : 1,
+          },
+          startDate: today,
+        };
 
     try {
       const endpoint = newType === 'task' ? '/tasks' : '/habits';
@@ -128,6 +123,7 @@ function DashboardPage() {
 
       setNewTitle('');
       setNewDeadline('');
+      setNewCategory('');
       setFeedback('');
     } catch (err) {
       setFeedback('Failed to add item. Check console for details.');
@@ -135,9 +131,17 @@ function DashboardPage() {
     }
   };
 
-  // Open / Close Edit Task Dialog
-
-  const openEditTask = (task) => {
+  const openEditTask = async (task) => {
+    if (task.status === 'todo') {
+      try {
+        const res = await api.patch(`/tasks/${task.id}/start`);
+        setTasks((prev) =>
+          prev.map((t) => (t.id === task.id ? { ...res.data, id: res.data._id } : t))
+        );
+      } catch (err) {
+        console.error('Failed to start task:', err);
+      }
+    }
     setEditingTask(task);
     setEditTaskTitle(task.title);
     setEditTaskPriority(task.priority);
@@ -165,13 +169,10 @@ function DashboardPage() {
     }
   };
 
-  //  Open / Close Edit Habit Dialog
-
   const openEditHabit = (habitEntry) => {
     const { habit } = habitEntry;
     setEditingHabit(habitEntry);
     setEditHabitName(habit.name);
-    // Map backend 'weekly_x' back to 'weekly' for the dropdown display
     setEditHabitSchedule(
       habit.schedule?.type === 'weekly_x' ? 'weekly' : (habit.schedule?.type ?? 'daily')
     );
@@ -197,7 +198,6 @@ function DashboardPage() {
           timesPerWeek: editHabitSchedule === 'weekly' ? editHabitTimesPerWeek : 1,
         },
       });
-      // Refetch so habit list reflects the updated schedule/target
       const todayRes = await api.get('/today');
       setHabits(mapHabits(todayRes.data.habits));
       closeEditHabit();
@@ -205,8 +205,6 @@ function DashboardPage() {
       console.error('Failed to update habit:', err);
     }
   };
-
-  // Toggle Task
 
   const handleToggleTask = async (task) => {
     try {
@@ -226,7 +224,27 @@ function DashboardPage() {
     }
   };
 
-  // Toggle Habit
+  const handleSkipTask = async (task) => {
+    try {
+      const res = await api.patch(`/tasks/${task.id}/skip`);
+      setTasks((prev) =>
+        prev.map((t) => (t.id === task.id ? { ...res.data, id: res.data._id } : t))
+      );
+    } catch (err) {
+      console.error('Failed to skip task:', err);
+    }
+  };
+
+  const handlePostponeTask = async (task) => {
+    try {
+      const res = await api.patch(`/tasks/${task.id}/postpone?days=1`);
+      setTasks((prev) =>
+        prev.map((t) => (t.id === task.id ? { ...res.data, id: res.data._id } : t))
+      );
+    } catch (err) {
+      console.error('Failed to postpone task:', err);
+    }
+  };
 
   const handleToggleBinaryHabit = async (habitEntry) => {
     const isDone = habitEntry.statusToday === 'done';
@@ -248,13 +266,13 @@ function DashboardPage() {
     }
   };
 
-  // Count Habit: Increment / Decrement
-
   const handleCountChange = async (habitEntry, delta) => {
     const target = habitEntry.habit.targetValue;
     const newValue = Math.max(0, Math.min(target, (habitEntry.currentValue || 0) + delta));
     const newStatus =
-      newValue >= target ? 'done' : newValue > 0 ? 'in_progress' : 'missed';
+      newValue >= target ? 'done'
+        : newValue > 0 ? 'in_progress'
+          : 'missed';
 
     try {
       await api.post('/habit-logs', {
@@ -275,8 +293,6 @@ function DashboardPage() {
     }
   };
 
-  // Delete
-
   const handleDeleteTask = async (task) => {
     try {
       await api.delete(`/tasks/${task.id}`);
@@ -295,26 +311,76 @@ function DashboardPage() {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    navigate('/login');
+  };
+
   return (
-    <Box sx={{ minHeight: '100vh', width: '100%', backgroundColor: '#f0f2f5', py: 4 }}>
+    <Box sx={{ 
+      minHeight: '100vh', 
+      width: '100%', 
+      backgroundColor: '#F2EFE9', 
+      color: '#2C3E50',
+      py: 4 
+    }}>
       <Container maxWidth="md">
 
         {/* Header */}
-        <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <Typography variant="body2" color="text.secondary">{todayLabel}</Typography>
-          <Button
-            variant="outlined"
-            onClick={() => navigate('/analytics')}
-            startIcon={<BarChartIcon />}
-            sx={{
-              fontWeight: 'bold',
-              borderColor: '#1a1a2e',
-              color: '#1a1a2e',
-              '&:hover': { backgroundColor: '#1a1a2e', color: '#fff', borderColor: '#1a1a2e' },
-            }}
-          >
-            Analytics
-          </Button>
+        <Box sx={{ mb: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box>
+            <Typography variant="h5" fontWeight={800} sx={{ color: '#1B4F72' }}>
+              Dashboard
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#5D6D7E' }}>{todayLabel}</Typography>
+          </Box>
+          
+          <Stack direction="row" spacing={1.5}>
+            <Button
+              variant="contained"
+              onClick={() => navigate('/analytics')}
+              startIcon={<BarChartIcon />}
+              sx={{
+                textTransform: 'none',
+                fontWeight: 600,
+                borderRadius: 2.5,
+                bgcolor: '#1B4F72',
+                boxShadow: '0 4px 12px rgba(27, 79, 114, 0.2)',
+                '&:hover': { backgroundColor: '#2874A6' },
+              }}
+            >
+              Analytics
+            </Button>
+              <Button
+              variant="contained"
+              onClick={() => navigate('/insights')}
+              startIcon={<BarChartIcon />}
+              sx={{
+                textTransform: 'none',
+                fontWeight: 600,
+                borderRadius: 2.5,
+                bgcolor: '#1B4F72',
+                boxShadow: '0 4px 12px rgba(27, 79, 114, 0.2)',
+                '&:hover': { backgroundColor: '#2874A6' },
+              }}
+            >
+              Insights
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={handleLogout}
+              startIcon={<LogoutIcon />}
+              sx={{ 
+                textTransform: 'none',
+                borderRadius: 2.5,
+                borderColor: '#A9CCE3', 
+                color: '#1B4F72',
+                '&:hover': { borderColor: '#1B4F72', bgcolor: 'rgba(27, 79, 114, 0.05)' }
+              }}
+            >
+              Logout
+            </Button>
+          </Stack>
         </Box>
 
         <AddForm
@@ -324,6 +390,7 @@ function DashboardPage() {
           onAdd={handleAdd}
           newPriority={newPriority} setNewPriority={setNewPriority}
           newDeadline={newDeadline} setNewDeadline={setNewDeadline}
+          newCategory={newCategory} setNewCategory={setNewCategory}
           habitScheduleType={habitScheduleType} setHabitScheduleType={setHabitScheduleType}
           habitTimesPerWeek={habitTimesPerWeek} setHabitTimesPerWeek={setHabitTimesPerWeek}
           habitTargetType={habitTargetType} setHabitTargetType={setHabitTargetType}
@@ -337,6 +404,8 @@ function DashboardPage() {
           onToggle={handleToggleTask}
           onEdit={openEditTask}
           onDelete={handleDeleteTask}
+          onSkip={handleSkipTask}
+          onPostpone={handlePostponeTask}
         />
 
         <HabitList
@@ -370,7 +439,6 @@ function DashboardPage() {
         targetValue={editHabitTargetValue} setTargetValue={setEditHabitTargetValue}
         targetUnit={editHabitTargetUnit} setTargetUnit={setEditHabitTargetUnit}
       />
-
     </Box>
   );
 }

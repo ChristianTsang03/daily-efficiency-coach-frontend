@@ -13,6 +13,7 @@ function AddForm({
   // Task fields
   newPriority, setNewPriority,
   newDeadline, setNewDeadline,
+  newCategory, setNewCategory,
   // Habit fields
   habitScheduleType, setHabitScheduleType,
   habitTimesPerWeek, setHabitTimesPerWeek,
@@ -23,7 +24,9 @@ function AddForm({
   return (
     <Paper elevation={4} sx={{ p: 4, borderRadius: 3, mb: 3 }}>
       <Typography variant="h6" fontWeight="bold" gutterBottom>Add New</Typography>
-      <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+      <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+
+        {/* 1. Title — always first */}
         <TextField
           label={newType === 'task' ? 'Title' : 'Habit Name'}
           value={newTitle}
@@ -31,6 +34,33 @@ function AddForm({
           onKeyDown={(e) => e.key === 'Enter' && onAdd()}
           sx={{ flex: 2, minWidth: 200 }}
         />
+
+        
+        {/* Type switcher */}
+        <FormControl sx={{ minWidth: 120 }}>
+          <InputLabel>Type</InputLabel>
+          <Select value={newType} label="Type" onChange={(e) => setNewType(e.target.value)}>
+            <MenuItem value="task">Task</MenuItem>
+            <MenuItem value="habit">Habit</MenuItem>
+          </Select>
+        </FormControl>
+
+        {/* 2. Category — second for tasks */}
+        {newType === 'task' && (
+          <FormControl sx={{ minWidth: 130 }}>
+            <InputLabel>Category</InputLabel>
+            <Select value={newCategory} label="Category" onChange={(e) => setNewCategory(e.target.value)}>
+              <MenuItem value="">None</MenuItem>
+              <MenuItem value="Work">Work</MenuItem>
+              <MenuItem value="Health">Health</MenuItem>
+              <MenuItem value="Personal">Personal</MenuItem>
+              <MenuItem value="Finance">Finance</MenuItem>
+              <MenuItem value="Education">Education</MenuItem>
+            </Select>
+          </FormControl>
+        )}
+
+        {/* Task: deadline */}
         {newType === 'task' && (
           <TextField
             label="Deadline"
@@ -41,6 +71,8 @@ function AddForm({
             sx={{ minWidth: 160 }}
           />
         )}
+
+        {/* Task: priority */}
         {newType === 'task' && (
           <FormControl sx={{ minWidth: 130 }}>
             <InputLabel>Priority</InputLabel>
@@ -51,6 +83,8 @@ function AddForm({
             </Select>
           </FormControl>
         )}
+
+        {/* Habit: schedule */}
         {newType === 'habit' && (
           <FormControl sx={{ minWidth: 130 }}>
             <InputLabel>Schedule</InputLabel>
@@ -60,6 +94,8 @@ function AddForm({
             </Select>
           </FormControl>
         )}
+
+        {/* Habit: times per week */}
         {newType === 'habit' && habitScheduleType === 'weekly' && (
           <TextField
             label="Times/week"
@@ -70,6 +106,8 @@ function AddForm({
             sx={{ minWidth: 120 }}
           />
         )}
+
+        {/* Habit: target type */}
         {newType === 'habit' && (
           <FormControl sx={{ minWidth: 130 }}>
             <InputLabel>Target</InputLabel>
@@ -79,6 +117,8 @@ function AddForm({
             </Select>
           </FormControl>
         )}
+
+        {/* Habit: count amount */}
         {newType === 'habit' && habitTargetType === 'count' && (
           <TextField
             label="Amount"
@@ -89,6 +129,8 @@ function AddForm({
             sx={{ minWidth: 100 }}
           />
         )}
+
+        {/* Habit: unit label */}
         {newType === 'habit' && habitTargetType === 'count' && (
           <TextField
             label="Unit (e.g. glasses)"
@@ -97,13 +139,7 @@ function AddForm({
             sx={{ minWidth: 150 }}
           />
         )}
-        <FormControl sx={{ minWidth: 120 }}>
-          <InputLabel>Type</InputLabel>
-          <Select value={newType} label="Type" onChange={(e) => setNewType(e.target.value)}>
-            <MenuItem value="task">Task</MenuItem>
-            <MenuItem value="habit">Habit</MenuItem>
-          </Select>
-        </FormControl>
+
         <Button variant="contained" onClick={onAdd} startIcon={<AddIcon />}>Add</Button>
       </Box>
       {feedback && <Alert severity="error" sx={{ mt: 2 }}>{feedback}</Alert>}
