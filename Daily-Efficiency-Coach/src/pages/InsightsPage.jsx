@@ -1,62 +1,68 @@
 import { useState, useEffect } from 'react';
 import {
-  Box, Button, Container, Typography, Paper, TextField, Stack, List, ListItem, ListItemText, Divider
+  Box, Button, Container, Typography, Paper, TextField,
+  Divider, CircularProgress
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import SendIcon from '@mui/icons-material/Send';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { useNavigate } from 'react-router-dom';
+import api from '../api/api';
 
 function InsightsPage() {
   const navigate = useNavigate();
   const [chatInput, setChatInput] = useState('');
-  
-  // Chat state placeholder
+  const [chatLoading, setChatLoading] = useState(false);
+  const [reflectionLoading, setReflectionLoading] = useState(true);
+
   const [messages, setMessages] = useState([
-    { role: 'ai', text: "I'm your Daily Efficiency Coach. Let's review your weekly insights" }
+    { role: 'ai', text: "I'm your Daily Efficiency Coach. Ask me anything about your productivity this week." }
   ]);
 
-  // Mock Data for Insights - Replace with backend state later
-  const [insights, setInsights] = useState(null);
+  const [reflectionText, setReflectionText] = useState(null);
 
+  // Fetch weekly reflection from backend on load
   useEffect(() => {
-    // Simulate fetching insights from backend
-    const fetchInsights = async () => {
-      // const res = await api.get('/analytics/weekly-insights');
-      // setInsights(res.data);
-      
-      setInsights({
-        whatWorked: [
-          "Completed 85% of high-priority tasks.",
-          "Maintained a 5-day streak for Morning Workout."
-        ],
-        needsImprovement: [
-          "Postponed 'Update Documentation' 3 times.",
-          "Task completion drops significantly after 7 PM."
-        ]
-      });
+    const fetchReflection = async () => {
+      setReflectionLoading(true);
+      try {
+        const res = await api.get('/ai/reflection');
+        setReflectionText(res.data.reflection);
+      } catch (err) {
+        console.error('Failed to fetch reflection:', err);
+        setReflectionText('Could not load reflection. Please try again later.');
+      } finally {
+        setReflectionLoading(false);
+      }
     };
-    
-    fetchInsights();
+    fetchReflection();
   }, []);
 
-  const handleSendMessage = () => {
-    if (chatInput.trim() === '') {
-      return;
-    }
+  // Send message to AI coach
+  const handleSendMessage = async () => {
+    if (chatInput.trim() === '') return;
 
     const newMsg = { role: 'user', text: chatInput };
     setMessages((prev) => [...prev, newMsg]);
     setChatInput('');
+    setChatLoading(true);
 
-    // TODO: Call backend AI endpoint here
-    // const res = await api.post('/coach/chat', { message: chatInput });
-    // setMessages((prev) => [...prev, { role: 'ai', text: res.data.reply }]);
+    try {
+      const res = await api.post('/ai/coach', { message: chatInput });
+      setMessages((prev) => [...prev, { role: 'ai', text: res.data.answer }]);
+    } catch (err) {
+      console.error('Failed to get AI response:', err);
+      setMessages((prev) => [...prev, { role: 'ai', text: 'Something went wrong. Please try again.' }]);
+    } finally {
+      setChatLoading(false);
+    }
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
       handleSendMessage();
     }
   };
@@ -64,6 +70,7 @@ function InsightsPage() {
   return (
     <Box sx={{ minHeight: '100vh', width: '100%', backgroundColor: '#F2EFE9', py: 4, color: '#2C3E50' }}>
       <Container maxWidth="md">
+
         {/* Header */}
         <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Box>
@@ -93,51 +100,50 @@ function InsightsPage() {
 
         {/* Reflection Report Section */}
         <Paper elevation={4} sx={{ p: 4, borderRadius: 3, mb: 4 }}>
-          <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ color: '#1B4F72' }}>
-            Reflection Report
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+            <AutoAwesomeIcon sx={{ color: '#1B4F72', fontSize: 20 }} />
+            <Typography variant="h6" fontWeight="bold" sx={{ color: '#1B4F72' }}>
+              Weekly Reflection
+            </Typography>
+          </Box>
           <Divider sx={{ mb: 2 }} />
 
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={4}>
-            {/* What Worked */}
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#4caf50', display: 'flex', alignItems: 'center', gap: 1 }}>
-                <CheckCircleIcon fontSize="small" /> What Worked
+          {reflectionLoading ? (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, py: 2 }}>
+              <CircularProgress size={20} sx={{ color: '#1B4F72' }} />
+              <Typography variant="body2" sx={{ color: '#5D6D7E' }}>
+                Generating your weekly reflection...
               </Typography>
-              <List dense>
-                {insights && insights.whatWorked.map((item, idx) => {
-                   return (
-                     <ListItem key={idx} disablePadding sx={{ py: 0.5 }}>
-                       <ListItemText primary={`• ${item}`} sx={{ color: '#5D6D7E' }} />
-                     </ListItem>
-                   );
-                })}
-              </List>
             </Box>
-
-            {/* What Needs Improvement */}
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#f44336', display: 'flex', alignItems: 'center', gap: 1 }}>
-                <TrendingUpIcon fontSize="small" /> What Needs Improvement
+          ) : (
+            <Box sx={{
+              p: 3,
+              bgcolor: '#EBF5FB',
+              borderRadius: 3,
+              border: '1px solid #D4E6F1',
+            }}>
+              <Typography
+                variant="body2"
+                sx={{
+                  whiteSpace: 'pre-wrap',
+                  lineHeight: 1.9,
+                  color: '#2C3E50',
+                }}
+              >
+                {reflectionText}
               </Typography>
-              <List dense>
-                {insights && insights.needsImprovement.map((item, idx) => {
-                  return (
-                    <ListItem key={idx} disablePadding sx={{ py: 0.5 }}>
-                      <ListItemText primary={`• ${item}`} sx={{ color: '#5D6D7E' }} />
-                    </ListItem>
-                  );
-                })}
-              </List>
             </Box>
-          </Stack>
+          )}
         </Paper>
 
         {/* AI Coach Chatbot Section */}
-        <Paper elevation={4} sx={{ p: 4, borderRadius: 3, display: 'flex', flexDirection: 'column', height: 450 }}>
-          <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ color: '#1B4F72' }}>
-            AI Coach
-          </Typography>
+        <Paper elevation={4} sx={{ p: 4, borderRadius: 3, display: 'flex', flexDirection: 'column', height: 480 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+            <CheckCircleIcon sx={{ color: '#1B4F72', fontSize: 20 }} />
+            <Typography variant="h6" fontWeight="bold" sx={{ color: '#1B4F72' }}>
+              AI Coach
+            </Typography>
+          </Box>
           <Divider sx={{ mb: 2 }} />
 
           {/* Chat History */}
@@ -157,11 +163,33 @@ function InsightsPage() {
                       borderTopRightRadius: isAi ? 12 : 4,
                     }}
                   >
-                    <Typography variant="body2">{msg.text}</Typography>
+                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.7 }}>
+                      {msg.text}
+                    </Typography>
                   </Box>
                 </Box>
               );
             })}
+
+            {/* Loading indicator while AI is responding */}
+            {chatLoading && (
+              <Box sx={{ display: 'flex', justifyContent: 'flex-start' }}>
+                <Box sx={{
+                  p: 2,
+                  borderRadius: 3,
+                  backgroundColor: '#E8F1F5',
+                  borderTopLeftRadius: 4,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                }}>
+                  <CircularProgress size={14} sx={{ color: '#1B4F72' }} />
+                  <Typography variant="body2" sx={{ color: '#1B4F72' }}>
+                    Thinking...
+                  </Typography>
+                </Box>
+              </Box>
+            )}
           </Box>
 
           {/* Chat Input */}
@@ -174,6 +202,7 @@ function InsightsPage() {
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
               onKeyDown={handleKeyDown}
+              disabled={chatLoading}
               sx={{
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 3,
@@ -184,12 +213,14 @@ function InsightsPage() {
             <Button
               variant="contained"
               onClick={handleSendMessage}
+              disabled={chatLoading || !chatInput.trim()}
               sx={{
                 borderRadius: 3,
                 bgcolor: '#1B4F72',
                 minWidth: 50,
                 px: 3,
-                '&:hover': { bgcolor: '#2874A6' }
+                '&:hover': { bgcolor: '#2874A6' },
+                '&:disabled': { bgcolor: '#A9CCE3' },
               }}
             >
               <SendIcon fontSize="small" />
