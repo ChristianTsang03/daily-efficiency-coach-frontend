@@ -58,7 +58,7 @@ function DashboardPage() {
       try {
         const [tasksRes, todayRes] = await Promise.all([
           api.get('/tasks'),
-          api.get('/today'),
+          api.get(`/today?date=${today}`),
         ]);
         setTasks(sortByPriority(tasksRes.data.map((t) => ({ ...t, id: t._id }))));
         setHabits(mapHabits(todayRes.data.habits));
@@ -117,7 +117,7 @@ function DashboardPage() {
       if (newType === 'task') {
         setTasks((prev) => [{ ...res.data, id: res.data._id }, ...prev]);
       } else {
-        const todayRes = await api.get('/today');
+        const todayRes = await api.get(`/today?date=${today}`);
         setHabits(mapHabits(todayRes.data.habits));
       }
 
@@ -198,7 +198,7 @@ function DashboardPage() {
           timesPerWeek: editHabitSchedule === 'weekly' ? editHabitTimesPerWeek : 1,
         },
       });
-      const todayRes = await api.get('/today');
+      const todayRes = await api.get(`/today?date=${today}`);
       setHabits(mapHabits(todayRes.data.habits));
       closeEditHabit();
     } catch (err) {
