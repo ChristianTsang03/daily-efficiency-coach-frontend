@@ -10,7 +10,7 @@ import {
 } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/api';
-
+import { today } from '../components/dashboardUtils';
 
 const COLORS = {
   completed: '#4caf50',
@@ -19,17 +19,14 @@ const COLORS = {
   late:      '#f44336',
 };
 
-// Human readable labels for time blocks returned by backend
 const TIME_BLOCK_LABELS = {
-  midnight:      'Midnight (12–5am)',  // add this
+  midnight:      'Midnight (12–5am)',
   early_morning: 'Early Morning (5–9am)',
   morning:       'Morning (9am–12pm)',
   afternoon:     'Afternoon (12–5pm)',
   evening:       'Evening (5–9pm)',
   night:         'Night (9pm+)',
 };
-
-//STAT CARD
 
 function StatCard({ label, value, subtitle, color }) {
   return (
@@ -49,31 +46,23 @@ function StatCard({ label, value, subtitle, color }) {
   );
 }
 
-
 function AnalyticsPage() {
   const navigate = useNavigate();
 
-  // Time window selector — shared by all task analytics sections
   const [days, setDays] = useState(7);
 
-  // Task completion rate
   const [completionData, setCompletionData]       = useState(null);
   const [completionLoading, setCompletionLoading] = useState(true);
 
-  // Task delays
   const [delayData, setDelayData]       = useState(null);
   const [delayLoading, setDelayLoading] = useState(true);
 
-  // Behavior patterns — productive day, time block, skipped, postponed, late by category
   const [patternData, setPatternData]       = useState(null);
   const [patternLoading, setPatternLoading] = useState(true);
 
-  // Habit streaks — habitId → streak count map
-  const [habits, setHabits]           = useState([]);
-  const [streaks, setStreaks]         = useState({});
+  const [habits, setHabits]               = useState([]);
+  const [streaks, setStreaks]             = useState({});
   const [habitsLoading, setHabitsLoading] = useState(true);
-
-  // Fetch task analytics on load and whenever days changes
 
   useEffect(() => {
     const fetchTaskAnalytics = async () => {
@@ -100,8 +89,6 @@ function AnalyticsPage() {
     fetchTaskAnalytics();
   }, [days]);
 
-  //  Fetch habits once, then streak for each
-
   useEffect(() => {
     const fetchHabitStreaks = async () => {
       setHabitsLoading(true);
@@ -110,14 +97,13 @@ function AnalyticsPage() {
         const habitList = habitsRes.data;
         setHabits(habitList);
 
-        // Fetch all streaks in parallel — one request per habit
+        // Pass today's local date to streak endpoint so timezone doesn't cause mismatch
         const streakResults = await Promise.all(
           habitList.map((h) =>
-            api.get(`/analytics/habits/streak?habit_id=${h._id}`)
+            api.get(`/analytics/habits/streak?habit_id=${h._id}&date=${today}`)
           )
         );
 
-        // Build habitId → streak map for easy lookup
         const streakMap = {};
         streakResults.forEach((res, i) => {
           streakMap[habitList[i]._id] = res.data.streak;
@@ -132,15 +118,13 @@ function AnalyticsPage() {
     fetchHabitStreaks();
   }, []);
 
-  // Derived chart data 
   const completionPieData = completionData
     ? [
-        { name: 'Completed',     value: completionData.completed,                                         fill: COLORS.completed },
-        { name: 'Not Completed', value: completionData.created - completionData.completed,       fill: COLORS.remaining },
+        { name: 'Completed',     value: completionData.completed,                               fill: COLORS.completed },
+        { name: 'Not Completed', value: completionData.created - completionData.completed,      fill: COLORS.remaining },
       ]
     : [];
 
-  // Bar chart 
   const delayBarData = delayData
     ? [
         { name: 'On Time', count: delayData.onTime, fill: COLORS.onTime },
@@ -148,21 +132,17 @@ function AnalyticsPage() {
       ]
     : [];
 
-  // Productive days bar chart — all 7 days sorted by completions
   const productiveDaysData = patternData?.productiveDays?.map((d) => ({
-    name:        d.day.slice(0, 3), // abbreviate: "Wednesday" → "Wed"
+    name:        d.day.slice(0, 3),
     completions: d.completions,
     fill:        '#1a1a2e',
   })) ?? [];
 
-  // Productive time blocks bar chart
   const productiveBlocksData = patternData?.productiveBlocks?.map((b) => ({
     name:        TIME_BLOCK_LABELS[b.time_block] ?? b.time_block,
     completions: b.completions,
     fill:        '#163775',
   })) ?? [];
-
-  // JSX
 
   return (
     <Box sx={{ minHeight: '100vh', width: '100%', backgroundColor: '#F2EFE9', py: 4 }}>
@@ -199,7 +179,7 @@ function AnalyticsPage() {
           </FormControl>
         </Box>
 
-        {/* ── Task Completion Rate ── */}
+        {/* Task Completion Rate */}
         <Paper elevation={4} sx={{ p: 4, borderRadius: 3, mb: 3 }}>
           <Typography variant="h6" fontWeight="bold" gutterBottom>
             Task Completion Rate
@@ -240,7 +220,7 @@ function AnalyticsPage() {
           )}
         </Paper>
 
-        {/* ── Task Delays ── */}
+        {/* Task Delays */}
         <Paper elevation={4} sx={{ p: 4, borderRadius: 3, mb: 3 }}>
           <Typography variant="h6" fontWeight="bold" gutterBottom>
             Task Delays
@@ -254,8 +234,8 @@ function AnalyticsPage() {
           ) : (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
               <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                <StatCard label="On Time"   value={delayData.onTime} subtitle="tasks completed on time" color="#4caf50" />
-                <StatCard label="Late"      value={delayData.late}   subtitle="tasks completed late"    color="#f44336" />
+                <StatCard label="On Time" value={delayData.onTime} subtitle="tasks completed on time" color="#4caf50" />
+                <StatCard label="Late"    value={delayData.late}   subtitle="tasks completed late"    color="#f44336" />
                 <StatCard
                   label="Avg Delay"
                   value={delayData.late > 0 ? `${delayData.avgDelayDays}d` : '—'}
@@ -277,12 +257,11 @@ function AnalyticsPage() {
           )}
         </Paper>
 
-        {/* ── Behavior Patterns ── */}
+        {/* Behavior Patterns */}
         <Paper elevation={4} sx={{ p: 4, borderRadius: 3, mb: 3 }}>
           <Typography variant="h6" fontWeight="bold" gutterBottom>
             Behavior Patterns
           </Typography>
-
           {patternLoading ? (
             <CircularProgress size={24} />
           ) : !patternData ? (
@@ -291,8 +270,6 @@ function AnalyticsPage() {
             </Typography>
           ) : (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-
-              {/* Most productive day and time block stat cards */}
               <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                 <StatCard
                   label="Most Productive Day"
@@ -308,7 +285,6 @@ function AnalyticsPage() {
                 />
               </Box>
 
-              {/* Productive days bar chart */}
               <Box>
                 <Typography variant="body2" fontWeight="bold" gutterBottom>
                   Completions by Day of Week
@@ -326,7 +302,6 @@ function AnalyticsPage() {
                 </Box>
               </Box>
 
-              {/* Productive time blocks bar chart */}
               <Box>
                 <Typography variant="body2" fontWeight="bold" gutterBottom>
                   Completions by Time of Day
@@ -344,7 +319,6 @@ function AnalyticsPage() {
                 </Box>
               </Box>
 
-              {/* Category-based stats — only shown when category data exists */}
               {patternData.mostSkipped?.length > 0 && (
                 <Box>
                   <Typography variant="body2" fontWeight="bold" gutterBottom>
@@ -352,13 +326,7 @@ function AnalyticsPage() {
                   </Typography>
                   <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                     {patternData.mostSkipped.map((item) => (
-                      <StatCard
-                        key={item.category}
-                        label={item.category}
-                        value={item.count}
-                        subtitle="times skipped"
-                        color="#f44336"
-                      />
+                      <StatCard key={item.category} label={item.category} value={item.count} subtitle="times skipped" color="#f44336" />
                     ))}
                   </Box>
                 </Box>
@@ -371,13 +339,7 @@ function AnalyticsPage() {
                   </Typography>
                   <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                     {patternData.mostPostponed.map((item) => (
-                      <StatCard
-                        key={item.category}
-                        label={item.category}
-                        value={item.count}
-                        subtitle="times postponed"
-                        color="#ff9800"
-                      />
+                      <StatCard key={item.category} label={item.category} value={item.count} subtitle="times postponed" color="#ff9800" />
                     ))}
                   </Box>
                 </Box>
@@ -390,19 +352,12 @@ function AnalyticsPage() {
                   </Typography>
                   <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                     {patternData.mostLate.map((item) => (
-                      <StatCard
-                        key={item.category}
-                        label={item.category}
-                        value={item.times_late}
-                        subtitle="times completed late"
-                        color="#f44336"
-                      />
+                      <StatCard key={item.category} label={item.category} value={item.times_late} subtitle="times completed late" color="#f44336" />
                     ))}
                   </Box>
                 </Box>
               )}
 
-              {/* Empty state for category stats when no categories set yet */}
               {patternData.mostSkipped?.length === 0 &&
                patternData.mostPostponed?.length === 0 &&
                patternData.mostLate?.length === 0 && (
@@ -410,12 +365,11 @@ function AnalyticsPage() {
                   Category breakdown will appear once tasks with categories are skipped, postponed, or completed late.
                 </Typography>
               )}
-
             </Box>
           )}
         </Paper>
 
-        {/* ── Habit Streaks ── */}
+        {/* Habit Streaks */}
         <Paper elevation={4} sx={{ p: 4, borderRadius: 3 }}>
           <Typography variant="h6" fontWeight="bold" gutterBottom>
             Habit Streaks
