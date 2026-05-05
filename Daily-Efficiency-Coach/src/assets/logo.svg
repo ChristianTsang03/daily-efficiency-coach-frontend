@@ -1,0 +1,63 @@
+<svg width="100%" viewBox="0 0 680 340" role="img" style="" xmlns="http://www.w3.org/2000/svg">
+  <title style="fill:rgb(0, 0, 0);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">Daily Efficiency Coach logo</title>
+  <desc style="fill:rgb(0, 0, 0);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">A bold logo featuring a stylized lightning bolt integrated with a circular progress arc, with the text "Daily Efficiency Coach" beside it.</desc>
+
+  <defs>
+    <clipPath id="hexClip">
+      <polygon points="160,30 220,62 220,126 160,158 100,126 100,62"/>
+    </clipPath>
+    <linearGradient id="boltGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#00D9B8"/>
+      <stop offset="100%" stop-color="#00A896"/>
+    </linearGradient>
+    <linearGradient id="arcGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#00D9B8"/>
+      <stop offset="100%" stop-color="#0D5C73"/>
+    </linearGradient>
+  </defs>
+
+  
+
+  <!-- === ICON MARK === -->
+  <!-- Outer hexagon background -->
+  <polygon points="160,22 228,60 228,136 160,174 92,136 92,60" rx="6" style="fill:rgb(13, 27, 42);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+  <!-- Ring track (full circle, faint) -->
+  <circle cx="160" cy="98" r="52" fill="none" stroke-width="7" stroke-linecap="round" style="fill:none;stroke:rgb(26, 51, 72);color:rgb(255, 255, 255);stroke-width:7px;stroke-linecap:round;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+  <!-- Progress arc: ~270 degrees (teal, bold) -->
+  <!-- Arc from 225° to 135° going clockwise = 270° progress -->
+  <!-- Start: 225° → x = 160+52*cos(225°) = 160-36.77=123.23, y=98+52*sin(225°)=98-36.77=61.23 -->
+  <!-- End: 135° → x=160+52*cos(135°)=123.23, y=98+52*sin(135°)=134.77 -->
+  <path d="M 123.2 61.2 A 52 52 0 1 1 123.2 134.8" fill="none" stroke="url(#arcGrad)" stroke-width="7" stroke-linecap="round" style="fill:none;color:rgb(255, 255, 255);stroke-width:7px;stroke-linecap:round;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+  <!-- Arc end dot (accent) -->
+  <circle cx="123.2" cy="134.8" r="5" fill="#00D9B8" style="fill:rgb(0, 217, 184);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+  <!-- Lightning bolt icon — bold, centered -->
+  <polygon points="168,48 148,100 163,100 152,148 180,92 163,92 178,48" fill="url(#boltGrad)" style="stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+  <!-- Small speed-line accents bottom right of hex -->
+  <line x1="196" y1="130" x2="218" y2="130" stroke="#00D9B8" stroke-width="2.5" stroke-linecap="round" opacity="0.7" style="fill:rgb(0, 0, 0);stroke:rgb(0, 217, 184);color:rgb(255, 255, 255);stroke-width:2.5px;stroke-linecap:round;stroke-linejoin:miter;opacity:0.7;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  <line x1="202" y1="139" x2="218" y2="139" stroke="#00D9B8" stroke-width="2.5" stroke-linecap="round" opacity="0.45" style="fill:rgb(0, 0, 0);stroke:rgb(0, 217, 184);color:rgb(255, 255, 255);stroke-width:2.5px;stroke-linecap:round;stroke-linejoin:miter;opacity:0.45;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  <line x1="208" y1="148" x2="218" y2="148" stroke="#00D9B8" stroke-width="2.5" stroke-linecap="round" opacity="0.25" style="fill:rgb(0, 0, 0);stroke:rgb(0, 217, 184);color:rgb(255, 255, 255);stroke-width:2.5px;stroke-linecap:round;stroke-linejoin:miter;opacity:0.25;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+  <!-- === WORDMARK === -->
+  <!-- "DEC" large initials treatment with "Daily Efficiency Coach" split -->
+
+  <!-- Main wordmark: DAILY -->
+  <text x="258" y="82" font-family="'Arial Black', 'Helvetica Neue', sans-serif" font-size="54" font-weight="900" letter-spacing="-1" style="fill:rgb(255, 255, 255);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Arial Black&quot;, &quot;Helvetica Neue&quot;, sans-serif;font-size:54px;font-weight:900;text-anchor:start;dominant-baseline:auto">DAILY</text>
+
+  <!-- EFFICIENCY — teal accent word -->
+  <text x="258" y="130" font-family="'Arial Black', 'Helvetica Neue', sans-serif" font-size="36" font-weight="900" letter-spacing="1" fill="url(#boltGrad)" style="stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Arial Black&quot;, &quot;Helvetica Neue&quot;, sans-serif;font-size:36px;font-weight:900;text-anchor:start;dominant-baseline:auto">EFFICIENCY</text>
+
+  <!-- COACH — muted, regular weight -->
+  <text x="262" y="163" font-family="'Arial Black', 'Helvetica Neue', sans-serif" font-size="36" font-weight="900" letter-spacing="8" style="fill:rgb(143, 163, 177);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Arial Black&quot;, &quot;Helvetica Neue&quot;, sans-serif;font-size:36px;font-weight:900;text-anchor:start;dominant-baseline:auto">COACH</text>
+
+  <!-- Divider rule -->
+  <line x1="258" y1="178" x2="580" y2="178" stroke="#00A896" stroke-width="2" stroke-linecap="round" opacity="0.6" style="fill:rgb(0, 0, 0);stroke:rgb(0, 168, 150);color:rgb(255, 255, 255);stroke-width:2px;stroke-linecap:round;stroke-linejoin:miter;opacity:0.6;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+  <!-- Tagline -->
+  <text x="259" y="200" font-family="'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="400" letter-spacing="3.5" style="fill:rgb(0, 217, 184);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Helvetica Neue&quot;, Arial, sans-serif;font-size:13px;font-weight:400;text-anchor:start;dominant-baseline:auto">TRACK · ANALYZE · IMPROVE</text>
+
+</svg>

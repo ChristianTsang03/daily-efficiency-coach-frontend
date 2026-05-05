@@ -1,29 +1,27 @@
 import { useState, useEffect } from 'react';
 import {
-  Box, Button, Container, Typography, Paper, TextField,
-  Divider, CircularProgress
+  Box, Button, Container, Typography, TextField, CircularProgress,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import SendIcon from '@mui/icons-material/Send';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import SendIcon from '@mui/icons-material/Send';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/api';
 
 function InsightsPage() {
   const navigate = useNavigate();
-  const [chatInput, setChatInput] = useState('');
-  const [chatLoading, setChatLoading] = useState(false);
+
+  const [chatInput, setChatInput]         = useState('');
+  const [chatLoading, setChatLoading]     = useState(false);
   const [reflectionLoading, setReflectionLoading] = useState(true);
+  const [reflectionText, setReflectionText]       = useState(null);
 
   const [messages, setMessages] = useState([
     { role: 'ai', text: "I'm your Daily Efficiency Coach. Ask me anything about your productivity this week." }
   ]);
 
-  const [reflectionText, setReflectionText] = useState(null);
+  // ── Fetch weekly reflection on load ───────────────────────────────────────
 
-  // Fetch weekly reflection from backend on load
   useEffect(() => {
     const fetchReflection = async () => {
       setReflectionLoading(true);
@@ -40,7 +38,8 @@ function InsightsPage() {
     fetchReflection();
   }, []);
 
-  // Send message to AI coach
+  // ── Send message to AI coach ──────────────────────────────────────────────
+
   const handleSendMessage = async () => {
     if (chatInput.trim() === '') return;
 
@@ -67,124 +66,144 @@ function InsightsPage() {
     }
   };
 
+  // ── JSX ───────────────────────────────────────────────────────────────────
+
   return (
-    <Box sx={{ minHeight: '100vh', width: '100%', backgroundColor: '#F2EFE9', py: 4, color: '#2C3E50' }}>
-      <Container maxWidth="md">
+    <div className="dec-page">
+      <div className="dec-dotgrid" />
+
+      <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1 }}>
 
         {/* Header */}
         <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Box>
-            <Typography variant="h5" fontWeight={800} sx={{ color: '#1B4F72' }}>
-              Weekly Insights
-            </Typography>
-            <Typography variant="body2" sx={{ color: '#5D6D7E' }}>
-              Reflection & AI Coaching
-            </Typography>
+            <h1 className="dec-page-title">AI Coach</h1>
+            <p className="dec-page-subtitle">Weekly reflection and personalized guidance</p>
           </Box>
           <Button
             variant="outlined"
             startIcon={<ArrowBackIcon />}
             onClick={() => navigate('/dashboard')}
-            sx={{
-              fontWeight: 600,
-              borderRadius: 2.5,
-              borderColor: '#A9CCE3',
-              color: '#1B4F72',
-              textTransform: 'none',
-              '&:hover': { backgroundColor: 'rgba(27, 79, 114, 0.05)', borderColor: '#1B4F72' },
-            }}
+            className="dec-back-btn"
+            sx={{ px: 2.5, py: 1 }}
           >
-            Back to Dashboard
+            Dashboard
           </Button>
         </Box>
 
-        {/* Reflection Report Section */}
-        <Paper elevation={4} sx={{ p: 4, borderRadius: 3, mb: 4 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-            <AutoAwesomeIcon sx={{ color: '#1B4F72', fontSize: 20 }} />
-            <Typography variant="h6" fontWeight="bold" sx={{ color: '#1B4F72' }}>
-              Weekly Reflection
-            </Typography>
+        {/* ── Weekly Reflection ── */}
+        <div className="dec-card" style={{ marginBottom: '1.25rem' }}>
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+            <Box sx={{
+              width: 32,
+              height: 32,
+              borderRadius: '8px',
+              bgcolor: '#EBF5FB',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <AutoAwesomeIcon sx={{ fontSize: 16, color: '#1B4F72' }} />
+            </Box>
+            <p className="dec-card-label" style={{ margin: 0 }}>Weekly Reflection</p>
           </Box>
-          <Divider sx={{ mb: 2 }} />
 
           {reflectionLoading ? (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, py: 2 }}>
-              <CircularProgress size={20} sx={{ color: '#1B4F72' }} />
-              <Typography variant="body2" sx={{ color: '#5D6D7E' }}>
+              <CircularProgress size={18} sx={{ color: '#1B4F72' }} />
+              <Typography sx={{ fontSize: '0.875rem', color: '#8FA3B1' }}>
                 Generating your weekly reflection...
               </Typography>
             </Box>
           ) : (
             <Box sx={{
               p: 3,
-              bgcolor: '#EBF5FB',
-              borderRadius: 3,
-              border: '1px solid #D4E6F1',
+              bgcolor: '#F8FBFD',
+              borderRadius: '10px',
+              border: '1px solid rgba(27,79,114,0.09)',
             }}>
-              <Typography
-                variant="body2"
-                sx={{
-                  whiteSpace: 'pre-wrap',
-                  lineHeight: 1.9,
-                  color: '#2C3E50',
-                }}
-              >
+              <Typography sx={{
+                fontSize: '0.9rem',
+                whiteSpace: 'pre-wrap',
+                lineHeight: 1.9,
+                color: '#2C3E50',
+              }}>
                 {reflectionText}
               </Typography>
             </Box>
           )}
-        </Paper>
+        </div>
 
-        {/* AI Coach Chatbot Section */}
-        <Paper elevation={4} sx={{ p: 4, borderRadius: 3, display: 'flex', flexDirection: 'column', height: 480 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-            <CheckCircleIcon sx={{ color: '#1B4F72', fontSize: 20 }} />
-            <Typography variant="h6" fontWeight="bold" sx={{ color: '#1B4F72' }}>
-              AI Coach
-            </Typography>
+        {/* ── AI Chatbot ── */}
+        <div className="dec-card" style={{ padding: 0, overflow: 'hidden' }}>
+
+          {/* Chat header bar */}
+          <Box sx={{
+            px: 3,
+            py: 2,
+            bgcolor: '#1B4F72',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+          }}>
+            <Box sx={{
+              width: 32,
+              height: 32,
+              borderRadius: '50%',
+              bgcolor: 'rgba(255,255,255,0.15)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <AutoAwesomeIcon sx={{ fontSize: 16, color: 'white' }} />
+            </Box>
+            <Box>
+              <Typography sx={{ fontSize: '0.875rem', fontWeight: 700, color: 'white', lineHeight: 1.2 }}>
+                Efficiency Coach
+              </Typography>
+              <Typography sx={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.55)' }}>
+                Ask me anything about your week
+              </Typography>
+            </Box>
           </Box>
-          <Divider sx={{ mb: 2 }} />
 
-          {/* Chat History */}
-          <Box sx={{ flexGrow: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 2, mb: 2, pr: 1 }}>
-            {messages.map((msg, idx) => {
-              const isAi = msg.role === 'ai';
-              return (
-                <Box key={idx} sx={{ display: 'flex', justifyContent: isAi ? 'flex-start' : 'flex-end' }}>
-                  <Box
-                    sx={{
-                      maxWidth: '75%',
-                      p: 2,
-                      borderRadius: 3,
-                      backgroundColor: isAi ? '#E8F1F5' : '#1B4F72',
-                      color: isAi ? '#1B4F72' : '#FFFFFF',
-                      borderTopLeftRadius: isAi ? 4 : 12,
-                      borderTopRightRadius: isAi ? 12 : 4,
-                    }}
-                  >
-                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.7 }}>
-                      {msg.text}
-                    </Typography>
-                  </Box>
-                </Box>
-              );
-            })}
+          {/* Message history */}
+          <Box sx={{
+            height: 360,
+            overflowY: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+            p: 3,
+            bgcolor: '#F8FBFD',
+          }}>
+            {messages.map((msg, idx) => (
+              <Box
+                key={idx}
+                sx={{ display: 'flex', justifyContent: msg.role === 'ai' ? 'flex-start' : 'flex-end' }}
+              >
+                <div className={msg.role === 'ai' ? 'dec-bubble-ai' : 'dec-bubble-user'}>
+                  {msg.text}
+                </div>
+              </Box>
+            ))}
 
-            {/* Loading indicator while AI is responding */}
+            {/* Loading indicator */}
             {chatLoading && (
               <Box sx={{ display: 'flex', justifyContent: 'flex-start' }}>
                 <Box sx={{
-                  p: 2,
-                  borderRadius: 3,
-                  backgroundColor: '#E8F1F5',
-                  borderTopLeftRadius: 4,
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 1,
+                  gap: 1.5,
+                  px: 2,
+                  py: 1.5,
+                  bgcolor: '#EBF5FB',
+                  borderRadius: '16px',
+                  borderTopLeftRadius: '4px',
                 }}>
-                  <CircularProgress size={14} sx={{ color: '#1B4F72' }} />
-                  <Typography variant="body2" sx={{ color: '#1B4F72' }}>
+                  <CircularProgress size={12} sx={{ color: '#1B4F72' }} />
+                  <Typography sx={{ fontSize: '0.8rem', color: '#1B4F72' }}>
                     Thinking...
                   </Typography>
                 </Box>
@@ -192,11 +211,17 @@ function InsightsPage() {
             )}
           </Box>
 
-          {/* Chat Input */}
-          <Box sx={{ display: 'flex', gap: 1 }}>
+          {/* Chat input */}
+          <Box sx={{
+            px: 3,
+            py: 2,
+            display: 'flex',
+            gap: 1.5,
+            bgcolor: 'white',
+            borderTop: '1px solid rgba(27,79,114,0.07)',
+          }}>
             <TextField
               fullWidth
-              variant="outlined"
               size="small"
               placeholder="Ask your coach for advice..."
               value={chatInput}
@@ -205,31 +230,30 @@ function InsightsPage() {
               disabled={chatLoading}
               sx={{
                 '& .MuiOutlinedInput-root': {
-                  borderRadius: 3,
-                  backgroundColor: '#F8F9FA',
-                }
+                  borderRadius: '10px',
+                  bgcolor: '#F8FBFD',
+                  fontSize: '0.875rem',
+                  '& fieldset': { borderColor: 'rgba(27,79,114,0.15)' },
+                  '&:hover fieldset': { borderColor: 'rgba(27,79,114,0.3)' },
+                  '&.Mui-focused fieldset': { borderColor: '#1B4F72' },
+                },
               }}
             />
             <Button
               variant="contained"
               onClick={handleSendMessage}
               disabled={chatLoading || !chatInput.trim()}
-              sx={{
-                borderRadius: 3,
-                bgcolor: '#1B4F72',
-                minWidth: 50,
-                px: 3,
-                '&:hover': { bgcolor: '#2874A6' },
-                '&:disabled': { bgcolor: '#A9CCE3' },
-              }}
+              className="dec-btn-primary"
+              sx={{ minWidth: 48, width: 48, height: 40, p: 0, borderRadius: '10px' }}
             >
-              <SendIcon fontSize="small" />
+              <SendIcon sx={{ fontSize: 16 }} />
             </Button>
           </Box>
-        </Paper>
+
+        </div>
 
       </Container>
-    </Box>
+    </div>
   );
 }
 

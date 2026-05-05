@@ -1,0 +1,205 @@
+/* =============================================
+   Daily Efficiency Coach — Global Styles
+   Uses real CSS classes alongside MUI sx props
+   ============================================= */
+
+/* Base */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #F2EFE9;
+  color: #2C3E50;
+  margin: 0;
+}
+
+/* Custom scrollbar — matches oatmeal/navy theme */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F2EFE9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #A9CCE3;
+  border-radius: 99px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #1B4F72;
+}
+
+/* Remove default link styling */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Page wrapper — used on dashboard, analytics, insights */
+.dec-page {
+  min-height: 100vh;
+  width: 100%;
+  background-color: #F2EFE9;
+  padding: 2rem 0;
+  position: relative;
+}
+
+/* Dot grid background texture */
+.dec-dotgrid {
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, #C5D8E8 1px, transparent 1px);
+  background-size: 28px 28px;
+  opacity: 0.3;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Page header row */
+.dec-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+/* Page title */
+.dec-page-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1B4F72;
+  font-family: 'Georgia', serif;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.2rem 0;
+}
+
+.dec-page-subtitle {
+  font-size: 0.85rem;
+  color: #8FA3B1;
+  margin: 0;
+}
+
+/* Card — base style shared across all inner pages */
+.dec-card {
+  background: #ffffff;
+  border: 1px solid rgba(27, 79, 114, 0.09);
+  border-radius: 14px;
+  padding: 1.75rem;
+  margin-bottom: 1.25rem;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.dec-card:hover {
+  border-color: rgba(27, 79, 114, 0.18);
+  box-shadow: 0 4px 20px rgba(27, 79, 114, 0.06);
+}
+
+/* Card section label */
+.dec-card-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #1B4F72;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin: 0 0 0.5rem 0;
+}
+
+/* Card title */
+.dec-card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1B4F72;
+  margin: 0 0 0.75rem 0;
+}
+
+/* Nav button shared style */
+.dec-nav-btn {
+  text-transform: none !important;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+}
+
+/* Back button */
+.dec-back-btn {
+  text-transform: none !important;
+  border-radius: 10px !important;
+  font-weight: 500 !important;
+  font-size: 0.875rem !important;
+  border-color: rgba(27, 79, 114, 0.2) !important;
+  color: #1B4F72 !important;
+}
+
+.dec-back-btn:hover {
+  background-color: rgba(27, 79, 114, 0.05) !important;
+  border-color: #1B4F72 !important;
+}
+
+/* Primary action button */
+.dec-btn-primary {
+  background-color: #1B4F72 !important;
+  color: white !important;
+  text-transform: none !important;
+  border-radius: 10px !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 14px rgba(27, 79, 114, 0.2) !important;
+  transition: all 0.2s ease !important;
+}
+
+.dec-btn-primary:hover {
+  background-color: #154060 !important;
+  box-shadow: 0 6px 20px rgba(27, 79, 114, 0.3) !important;
+}
+
+/* Chat bubble styles */
+.dec-bubble-ai {
+  background-color: #EBF5FB;
+  color: #1B4F72;
+  border-radius: 16px;
+  border-top-left-radius: 4px;
+  padding: 0.875rem 1.125rem;
+  max-width: 75%;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.dec-bubble-user {
+  background-color: #1B4F72;
+  color: white;
+  border-radius: 16px;
+  border-top-right-radius: 4px;
+  padding: 0.875rem 1.125rem;
+  max-width: 75%;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+/* Stat pill — small accent badge */
+.dec-stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.75rem;
+  background-color: rgba(27, 79, 114, 0.07);
+  border: 1px solid rgba(27, 79, 114, 0.12);
+  border-radius: 99px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #1B4F72;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Smooth global transitions */
+button, a, input {
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
